@@ -1,0 +1,103 @@
+version: "3"
+
+services:
+  moody-broker:
+    image: eclipse-mosquitto
+    restart: always
+    networks:
+      - mqtt
+    ports:
+      - 8883:8883
+    volumes:
+      - ./broker:/mosquitto/config
+    command:
+      ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf", "-v"]
+
+  moody-gateway:
+    build: ./gateway
+    restart: always
+    volumes:
+      - ./gateway/data:/data
+    network_mode: host
+    depends_on:
+      - moody-broker
+      - moody-api-gw
+
+  moody-adminpanel:
+    build: ./admin_panel
+    restart: always
+    networks:
+      - nginx-front
+    ports:
+      - 3000:3000
+    depends_on:
+      - moody-gateway
+
+  moody-activity:
+    build: ./activity
+    restart: always
+    networks:
+      - nginx-back
+      - postgres
+    volumes:
+      - ./activity/data:/data
+    depends_on:
+      - moody-activity-db
+
+  moody-activity-db:
+    build: ./activity/activity_pg
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=password
+    networks:
+      - postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - activity-pg:/var/lib/postgresql/data
+
+  moody-dataset:
+    build: ./dataset
+    restart: always
+    networks:
+      - nginx-back
+      - mongo
+    depends_on:
+      - moody-dataset-db
+
+  moody-dataset-db:
+    image: mongo
+    restart: always
+    networks:
+      - mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - dataset-mongo:/data/db
+
+  moody-api-gw:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./api_gateway/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - nginx-front
+      - nginx-back
+    ports:
+      - 8080:80
+    depends_on:
+      - moody-activity
+      - moody-dataset
+
+volumes:
+  activity-pg:
+    external: false
+  dataset-mongo:
+    external: false
+
+networks:
+  mqtt:
+  nginx-front:
+  nginx-back:
+  postgres:
+  mongo:

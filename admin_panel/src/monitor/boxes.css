@@ -1,0 +1,26 @@
+.monitor {
+    padding: 2%;
+}
+
+.serviceGrid {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto;
+}
+
+.serviceBox {
+    text-align: center;
+    border-radius: 25px;
+    background: #ebeeff;
+    border: 1px solid #af7bc7;
+    width: 70%;
+    height: 90%;
+}
+
+.error {
+    text-align: center;
+    border-radius: 25px;
+    background: #ebeeff;
+    border: 1px solid #af7bc7;
+    width: 20%;
+    height: 20%;
+}

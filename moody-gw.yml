@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  moody-broker:
+    image: eclipse-mosquitto
+    restart: always
+    networks:
+      - mqtt
+    ports:
+      - 8883:8883
+    volumes:
+      - ./broker:/mosquitto/config
+    command:
+      ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf", "-v"]
+
+  moody-gateway:
+    build: ./gateway
+    restart: always
+    volumes:
+      - ./gateway/data:/data
+    network_mode: host
+    depends_on:
+      - moody-broker
+      - moody-api-gw
+
+  moody-adminpanel:
+    build: ./admin_panel
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - moody-gateway
+
+networks:
+  mqtt:
